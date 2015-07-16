@@ -153,6 +153,14 @@ class AmbariCluster
   end
 
   def add_service(cluster:, service:)
+    headers = { "X-Requested-By" => "#{@user}" }
+    # Check if service is already available in service list.
+    if services(cluster: cluster).include?(service)
+      puts "already installed."
+    else
+      uri = @uri + "clusters/#{cluster}/services/#{service}"
+      RestClient::Request.new(:method => :post, :url => uri, :user => @user, :password => @password, :headers => headers).execute
+    end
   end
 
   def remove_service(cluster:, service:)
@@ -182,20 +190,13 @@ class AmbariCluster
 
   def add_host(cluster:, host:)
     headers = { "X-Requested-By" => "#{@user}"}
-    uri = hosts(cluster: cluster)
-    hosts = uri['items']
-    hosts.each do |h|
-      next if h['Hosts']["host_name"].include?(host)
-        url = h['href']
-        RestClient::Request.new(:method => :post, :url => url, :user => @user, :password => @password, :headers => headers).execute
-      end
+    return if hosts(cluster: cluster)['href']
+        RestClient::Request.new(:method => :post, :url => uri, :user => @user, :password => @password, :headers => headers).execute
     end
   end
 
   def remove_host(cluster:, host:)
     headers = { "X-Requested-By" => "#{@user}" }
     uri = host(cluster: cluster, host: host)['href']
-
     RestClient::Request.new(:method => :delete, :url => uri, :user => @user, :password => @password, :headers => headers).execute
   end
-end
