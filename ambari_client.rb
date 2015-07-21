@@ -1,5 +1,6 @@
 require 'rest_client'
 require 'byebug'
+require 'yaml'
 
 class AmbariCluster
 
@@ -152,22 +153,30 @@ class AmbariCluster
     return res
   end
 
+  def add_service_component(cluster:, service:, component:)
+    # a new component is installed by first doing a POST to the endpoint to place it in install_pending
+    headers = { "X-Requested-By" => "#{@user}" }
+    uri = @uri + "clusters/#{cluster}/services/#{service}/components/#{component}"
+    RestClient::Request.new(:method => :post, :url => uri, :user => @user, :password => @password, :headers => headers).execute
+  end
+
+
   def add_service(cluster:, service:)
     headers = { "X-Requested-By" => "#{@user}" }
-    # Check if service is already available in service list.
     if services(cluster: cluster).include?(service)
       puts "already installed."
     else
       uri = @uri + "clusters/#{cluster}/services/#{service}"
-      RestClient::Request.new(:method => :post, :url => uri, :user => @user, :password => @password, :headers => headers).execute
+      res = RestClient::Request.new(:method => :post, :url => uri, :user => @user, :password => @password, :headers => headers).execute
+      add_service_component(cluster:"Smoke", service:"YARN", component:"RESOURCEMANAGER")
+      return service_components(cluster:"Smoke", service:"YARN")
+      
     end
   end
 
   def remove_service(cluster:, service:)
     headers = { "X-Requested-By" => "#{@user}" }
-
-    uri = service(cluster: cluster, service: service)['href']
-
+    uri = service(cluster: cluster, service: service)
     RestClient::Request.new(:method => :delete, :url => uri, :user => @user, :password => @password, :headers => headers).execute
   end
 
@@ -184,8 +193,7 @@ class AmbariCluster
   def remove_component(cluster:, host:, component:)
     headers = { "X-Requested-By" => "#{@user}" }
     uri = host_component(cluster: cluster, host: host, component: component)['href']
-
-    RestClient::Request.new(:method => :delete, :url => uri, :user => @user, :password => @password, :headers => headers).execute
+    return RestClient::Request.new(:method => :delete, :url => uri, :user => @user, :password => @password, :headers => headers).execute
   end
 
   def add_host(cluster:, host:)
