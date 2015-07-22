@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 require 'rest_client'
 require 'byebug'
 require 'yaml'
@@ -167,16 +168,18 @@ class AmbariCluster
       puts "already installed."
     else
       uri = @uri + "clusters/#{cluster}/services/#{service}"
-      res = RestClient::Request.new(:method => :post, :url => uri, :user => @user, :password => @password, :headers => headers).execute
-      add_service_component(cluster:"Smoke", service:"YARN", component:"RESOURCEMANAGER")
-      return service_components(cluster:"Smoke", service:"YARN")
-      
+      RestClient::Request.new(:method => :post, :url => uri, :user => @user, :password => @password, :headers => headers).execute
+      components = YAML.load_file("components.yml")[0]["service_components"]
+      components[service].each do |component|
+        add_service_component(cluster: cluster, service: service, component: component)
+      end
     end
   end
 
   def remove_service(cluster:, service:)
     headers = { "X-Requested-By" => "#{@user}" }
-    uri = service(cluster: cluster, service: service)
+    service_name = service(cluster:cluster, service:service)
+    uri = service_name["href"]
     RestClient::Request.new(:method => :delete, :url => uri, :user => @user, :password => @password, :headers => headers).execute
   end
 
@@ -185,7 +188,6 @@ class AmbariCluster
     # and then following it with a state change to INSTALLED (which just so happens is what the stop method does)
     headers = { "X-Requested-By" => "#{@user}" }
     uri = host(cluster: cluster, host: host)['href'] + "host_components/#{component}"
-
     RestClient::Request.new(:method => :post, :url => uri, :user => @user, :password => @password, :headers => headers).execute
     res = stop_component(cluster: cluster, host: host, component: component)
   end
