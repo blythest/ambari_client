@@ -58,7 +58,7 @@ module AmbariClient
       @user     = user
       @password = password
 
-      @uri = "http://#{@user}:#{@password}@#{@host}:#{port}/api/v1/"
+      @base_uri = "http://#{@user}:#{@password}@#{@host}:#{port}/api/v1/"
 
       @test_cluster = { "c1" => { }, "c2" => {} }
     end
@@ -66,47 +66,47 @@ module AmbariClient
     def clusters
       # Fetch a list of clusters this ambari server manages
       # returns an array
-      res = JSON(RestClient.get(@uri + "clusters/"))
+      res = JSON(RestClient.get(@base_uri + "clusters/"))
       clusters = res['items'].collect { |item| item["Clusters"]["cluster_name"] }
       return clusters
     end
 
     def cluster(cluster:)
       # Fetch a JSON object describing the named cluster
-      res = JSON(RestClient.get(@uri + "clusters/#{cluster}"))
+      res = JSON(RestClient.get(@base_uri + "clusters/#{cluster}"))
       return res
     end
 
     def hosts(cluster:)
       # Fetch a list of hosts within a named cluster
       # returns an array
-      res = JSON(RestClient.get(@uri + "clusters/#{cluster}/hosts/"))
+      res = JSON(RestClient.get(@base_uri + "clusters/#{cluster}/hosts/"))
       hosts = res['items'].collect { |item| item["Hosts"]["host_name"] }
       return hosts
     end
 
     def host(cluster:, host:)
       # Fetch a JSON object describing the named host
-      res = JSON(RestClient.get(@uri + "clusters/#{cluster}/hosts/#{host}/"))
+      res = JSON(RestClient.get(@base_uri + "clusters/#{cluster}/hosts/#{host}/"))
       return res
     end
 
     def services(cluster:)
       # Fetch a list of services within a named cluster
-      res = JSON(RestClient.get(@uri + "clusters/#{cluster}/services/"))
+      res = JSON(RestClient.get(@base_uri + "clusters/#{cluster}/services/"))
       services = res['items'].collect { |item| item["ServiceInfo"]["service_name"] }
       return services
     end
 
     def service(cluster:, service:)
       # Fetch a JSON object describing the names service
-      res = JSON(RestClient.get(@uri + "clusters/#{cluster}/services/#{service}"))
+      res = JSON(RestClient.get(@base_uri + "clusters/#{cluster}/services/#{service}"))
       return res
     end
 
     def service_components(cluster:, service:)
       # Fetch a list of components within a named service
-      res = JSON(RestClient.get(@uri + "clusters/#{cluster}/services/#{service}/components/"))
+      res = JSON(RestClient.get(@base_uri + "clusters/#{cluster}/services/#{service}/components/"))
 
       components = res['items'].collect { |item| item["ServiceComponentInfo"]["component_name"] }
       return components
@@ -114,20 +114,20 @@ module AmbariClient
 
     def service_component(cluster:, service:, component:)
       # Fetch a JSON object describing a service component
-      res = JSON(RestClient.get(@uri + "clusters/#{cluster}/services/#{service}/components/#{component}/"))
+      res = JSON(RestClient.get(@base_uri + "clusters/#{cluster}/services/#{service}/components/#{component}/"))
       return res
     end
 
     def host_components(cluster:, host:)
       # Return a list of components running on the host
-      res = JSON(RestClient.get(@uri + "clusters/#{cluster}/hosts/#{host}/host_components/"))
+      res = JSON(RestClient.get(@base_uri + "clusters/#{cluster}/hosts/#{host}/host_components/"))
 
       components = res['items'].collect { |item| item["HostRoles"]["component_name"] }
     end
 
     def host_component(cluster:, host:, component:)
       # Fetch a JSON object describing a component on a host
-      res = JSON(RestClient.get(@uri + "clusters/#{cluster}/hosts/#{host}/host_components/#{component}"))
+      res = JSON(RestClient.get(@base_uri + "clusters/#{cluster}/hosts/#{host}/host_components/#{component}"))
       return res
     end
 
